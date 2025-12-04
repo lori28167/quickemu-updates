@@ -22,6 +22,8 @@ jobs:
     needs: version-check
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v5     # <-- REQUIRED
+
       - name: Create draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,6 +58,8 @@ jobs:
     needs: build-release
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v5     # <-- REQUIRED
+
       - name: Publish release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
