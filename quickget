@@ -1169,7 +1169,7 @@ function languages_windows-server() {
 }
 
 function releases_zorin() {
-    echo 17 16
+    echo 18 17 16
 }
 
 function editions_zorin() {
@@ -2942,21 +2942,15 @@ function unattended_windows() {
           <Path>E:\qxldod\w10\amd64</Path>
         </PathAndCredentials>
         <PathAndCredentials wcm:action="add" wcm:keyValue="7">
-          <Path>E:\amd64\w10</Path>
-        </PathAndCredentials>
-        <PathAndCredentials wcm:action="add" wcm:keyValue="8">
-          <Path>E:\viogpudo\w10\amd64</Path>
-        </PathAndCredentials>
-        <PathAndCredentials wcm:action="add" wcm:keyValue="9">
           <Path>E:\viorng\w10\amd64</Path>
         </PathAndCredentials>
-        <PathAndCredentials wcm:action="add" wcm:keyValue="10">
+        <PathAndCredentials wcm:action="add" wcm:keyValue="8">
           <Path>E:\NetKVM\w10\amd64</Path>
         </PathAndCredentials>
-        <PathAndCredentials wcm:action="add" wcm:keyValue="11">
+        <PathAndCredentials wcm:action="add" wcm:keyValue="9">
           <Path>E:\viofs\w10\amd64</Path>
         </PathAndCredentials>
-        <PathAndCredentials wcm:action="add" wcm:keyValue="12">
+        <PathAndCredentials wcm:action="add" wcm:keyValue="10">
           <Path>E:\Balloon\w10\amd64</Path>
         </PathAndCredentials>
       </DriverPaths>
@@ -3016,19 +3010,24 @@ function unattended_windows() {
           <Order>2</Order>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
-          <CommandLine>msiexec /i F:\UsbDk_1.0.22_x64.msi /quiet /passive /qn</CommandLine>
-          <Description>Install usbdk USB sharing agent</Description>
-          <Order>3</Order>
-        </SynchronousCommand>
-        <SynchronousCommand wcm:action="add">
           <CommandLine>msiexec /i F:\spice-vdagent-x64-0.10.0.msi /quiet /passive /qn</CommandLine>
           <Description>Install spice-vdagent SPICE agent</Description>
-          <Order>4</Order>
+          <Order>3</Order>
         </SynchronousCommand>
         <SynchronousCommand wcm:action="add">
           <CommandLine>Cmd /c POWERCFG -H OFF</CommandLine>
           <Description>Disable Hibernation</Description>
-          <Order>5</Order>
+          <Order>4</Order>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <CommandLine>pnputil /add-driver E:\viogpudo\w10\amd64\viogpudo.inf /install</CommandLine>
+          <Description>Install viogpudo driver</Description>
+          <Order>6</Order>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <CommandLine>cmd /c net accounts /maxpwage:unlimited</CommandLine>
+          <Description>Local account passwords never expire</Description>
+          <Order>7</Order>
         </SynchronousCommand>
       </FirstLogonCommands>
     </component>
@@ -3040,10 +3039,9 @@ EOF
 echo "Downloading Spice drivers..."
 web_get https://www.spice-space.org/download/windows/spice-webdavd/spice-webdavd-x64-latest.msi "${VM_PATH}/unattended"
 web_get https://www.spice-space.org/download/windows/vdagent/vdagent-win-0.10.0/spice-vdagent-x64-0.10.0.msi "${VM_PATH}/unattended"
-web_get https://www.spice-space.org/download/windows/usbdk/UsbDk_1.0.22_x64.msi "${VM_PATH}/unattended"
 
 echo "Making unattended.iso"
-mkisofs -quiet -l -o "${VM_PATH}/unattended.iso" "${VM_PATH}/unattended/"
+mkisofs -quiet -J -o "${VM_PATH}/unattended.iso" "${VM_PATH}/unattended/"
 }
 
 function handle_curl_error() {
