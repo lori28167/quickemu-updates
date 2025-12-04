@@ -1,78 +1,63 @@
 name: Publish Release 🏷️
 
 on:
-  push:
-    tags:
-      - "v?[0-9]+.[0-9]+.[0-9]+*"
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "The existing tag to publish"
-        type: "string"
-        required: true
+
+env:
+  PRESET_VERSION: "1.4.0"   # <-- Change this when you want a new release
 
 jobs:
   version-check:
-    name: "Check versions ⚖️"
+    name: "Check preset version ⚖️"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - name: "Compare App and Git versions 🟰"
+      - run: |
+          if [[ ! "$PRESET_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: PRESET_VERSION is not a valid x.y.z version"
+            exit 1
+          fi
+          echo "Using preset version: $PRESET_VERSION"
+
+  draft-release:
+    needs: version-check
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Create draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          APP_VERSION=latest
-          GIT_VERSION=$(git describe --tags | cut -d'-' -f1)
-          echo "App version: ${REL_VERSION}"
-          echo "Git version: ${GIT_VERSION}"
-          if [ "${APP_VERSION}" != "${GIT_VERSION}" ]; then
-              echo "ERROR! Version mismatch.";
-              exit 1
-          fi
-
-  draft-release:
-    needs: [version-check]
-    name: "Draft Release 📥️"
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v5
-    - name: Create release ${{ github.ref }} as a draft
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh release create "${{ github.ref }}" --draft --generate-notes
+          gh release create "v$PRESET_VERSION" --draft --generate-notes
 
   build-release:
-    needs: [draft-release]
-    name: "Build Release 👨‍🔧"
+    needs: draft-release
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v5
-    - name: Build and Upload .deb
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        sudo apt-get -y update
-        sudo apt-get -y install debhelper devscripts
-        REL_VER=latest
-        rm debian/changelog
-        dch --package quickemu --newversion="${REL_VER}-1" --distribution=unstable "New upstream release." --create
-        dpkg-buildpackage --build=binary --no-check-builddeps --compression=gzip
-        gh release upload "${{ github.ref }}" "../quickemu_${REL_VER}-1_all.deb" --clobber
+      - uses: actions/checkout@v5
+
+      - name: Build and upload .deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y devscripts debhelper
+
+          # Debian version must start with digit → use PRESET_VERSION
+          DEB_VER="${PRESET_VERSION}-1"
+
+          rm -f debian/changelog
+          dch --package quickemu --newversion="$DEB_VER" --distribution=unstable \
+              "Preset upstream release" --create
+
+          dpkg-buildpackage --build=binary --no-check-builddeps --compression=gzip
+
+          gh release upload "v$PRESET_VERSION" "../quickemu_${DEB_VER}_all.deb" --clobber
 
   publish-release:
-    needs: [build-release]
-    name: "Publish Release 📤️"
+    needs: build-release
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v5
-    - name: Publish release ${{ github.ref }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        if [ "$(gh release view "${{ github.ref }}" --json assets --template '{{len .assets}}')" -lt 0 ]; then
-          exit 1
-        fi
-        gh release edit "${{ github.ref }}" --draft=false
+      - name: Publish release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "v$PRESET_VERSION" --draft=false
