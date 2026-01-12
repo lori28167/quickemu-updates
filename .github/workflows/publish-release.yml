@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  PRESET_VERSION: "5.0.0"   # <-- Change this when you want a new release
+  PRESET_VERSION: "5.1.0"   # <-- Change this when you want a new release
 
 jobs:
   version-check:
