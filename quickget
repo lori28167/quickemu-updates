@@ -945,7 +945,7 @@ function editions_peppermint() {
 }
 
 function releases_popos() {
-    echo 22.04 20.04
+    echo 22.04 20.04 24.04
 }
 
 function editions_popos() {
@@ -2316,6 +2316,9 @@ function get_opensuse() {
     elif [ "${RELEASE}" == 15.0 ] || [ "${RELEASE}" == 15.1 ]; then
         ISO="openSUSE-Leap-${RELEASE}-DVD-x86_64.iso"
         URL="https://download.opensuse.org/distribution/leap/${RELEASE}/iso"
+    elif [ "${RELEASE}" == 16.0 ]; then
+        ISO="Leap-${RELEASE}-offline-installer-x86_64.install.iso"
+        URL="https://download.opensuse.org/distribution/leap/${RELEASE}/offline"
     else
         ISO="openSUSE-Leap-${RELEASE}-DVD-x86_64-Current.iso"
         URL="https://download.opensuse.org/distribution/leap/${RELEASE}/iso"
